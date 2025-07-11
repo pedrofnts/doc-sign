@@ -6,11 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ArrowLeft, CalendarIcon, Send } from "lucide-react";
+import { ArrowLeft, CalendarIcon, Send, Download } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
+import { getPDFService } from "@/lib/pdf-service";
 
 interface SubscriptionFormProps {
   onBack: () => void;
@@ -26,6 +27,8 @@ export const SubscriptionForm = ({ onBack }: SubscriptionFormProps) => {
   const [dataNascimento, setDataNascimento] = useState<Date>();
   const [dataEvento, setDataEvento] = useState<Date>();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formSubmitted, setFormSubmitted] = useState(false);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
   // Máscara para CPF
   const formatCPF = (value: string) => {
@@ -72,6 +75,49 @@ export const SubscriptionForm = ({ onBack }: SubscriptionFormProps) => {
     return null;
   };
 
+  const generatePDF = async () => {
+    if (!dataNascimento || !dataEvento) {
+      toast({
+        title: "Erro",
+        description: "Data de nascimento e data do evento são obrigatórias para gerar o PDF.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsGeneratingPDF(true);
+    
+    try {
+      const pdfService = getPDFService();
+      
+      const pdfFormData = {
+        nomeCompleto: formData.nomeCompleto,
+        cpf: formData.cpf,
+        dataNascimento: dataNascimento,
+        endereco: formData.endereco,
+        telefone: formData.telefone,
+        dataEvento: dataEvento,
+      };
+      
+      const pdfUrl = await pdfService.generatePDF(pdfFormData);
+      await pdfService.downloadPDF(pdfUrl, 'termo-responsabilidade-desafio-top.pdf');
+      
+      toast({
+        title: "PDF gerado com sucesso!",
+        description: "O termo de responsabilidade foi baixado para o seu dispositivo.",
+      });
+    } catch (error) {
+      console.error('Erro ao gerar PDF:', error);
+      toast({
+        title: "Erro ao gerar PDF",
+        description: "Ocorreu um erro ao gerar o documento. Verifique sua conexão com a internet e tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -96,7 +142,19 @@ export const SubscriptionForm = ({ onBack }: SubscriptionFormProps) => {
     });
     
     setIsSubmitting(false);
-    onBack();
+    setFormSubmitted(true);
+  };
+
+  const handleReset = () => {
+    setFormData({
+      nomeCompleto: "",
+      cpf: "",
+      endereco: "",
+      telefone: "",
+    });
+    setDataNascimento(undefined);
+    setDataEvento(undefined);
+    setFormSubmitted(false);
   };
 
   return (
@@ -116,160 +174,204 @@ export const SubscriptionForm = ({ onBack }: SubscriptionFormProps) => {
           <p className="text-slate-600">Preencha os dados abaixo para criar sua nova assinatura</p>
         </div>
 
-        {/* Form Card */}
-        <Card className="max-w-2xl mx-auto shadow-2xl border-0 bg-white/90 backdrop-blur-sm">
-          <CardHeader className="text-center pb-6">
-            <CardTitle className="text-2xl font-semibold text-slate-800">
-              Dados da Assinatura
-            </CardTitle>
-            <CardDescription className="text-slate-600">
-              Todas as informações são obrigatórias
-            </CardDescription>
-          </CardHeader>
-          
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Nome Completo */}
-              <div className="space-y-2">
-                <Label htmlFor="nomeCompleto" className="text-slate-700 font-medium">
-                  Nome Completo
-                </Label>
-                <Input
-                  id="nomeCompleto"
-                  placeholder="Digite seu nome completo"
-                  value={formData.nomeCompleto}
-                  onChange={(e) => handleInputChange('nomeCompleto', e.target.value)}
-                  className="h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500/20"
-                />
-              </div>
-
-              {/* CPF */}
-              <div className="space-y-2">
-                <Label htmlFor="cpf" className="text-slate-700 font-medium">
-                  CPF
-                </Label>
-                <Input
-                  id="cpf"
-                  placeholder="000.000.000-00"
-                  value={formData.cpf}
-                  onChange={(e) => handleInputChange('cpf', e.target.value)}
-                  maxLength={14}
-                  className="h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500/20"
-                />
-              </div>
-
-              {/* Data de Nascimento */}
-              <div className="space-y-2">
-                <Label className="text-slate-700 font-medium">
-                  Data de Nascimento
-                </Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full h-12 justify-start text-left font-normal border-slate-200",
-                        !dataNascimento && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {dataNascimento ? format(dataNascimento, "dd/MM/yyyy", { locale: ptBR }) : "Selecione a data"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={dataNascimento}
-                      onSelect={setDataNascimento}
-                      disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
-                      initialFocus
-                      className="p-3 pointer-events-auto"
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              {/* Endereço */}
-              <div className="space-y-2">
-                <Label htmlFor="endereco" className="text-slate-700 font-medium">
-                  Endereço
-                </Label>
-                <Input
-                  id="endereco"
-                  placeholder="Rua, número, complemento, bairro, cidade - UF"
-                  value={formData.endereco}
-                  onChange={(e) => handleInputChange('endereco', e.target.value)}
-                  className="h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500/20"
-                />
-              </div>
-
-              {/* Telefone */}
-              <div className="space-y-2">
-                <Label htmlFor="telefone" className="text-slate-700 font-medium">
-                  Telefone
-                </Label>
-                <Input
-                  id="telefone"
-                  placeholder="(00) 00000-0000"
-                  value={formData.telefone}
-                  onChange={(e) => handleInputChange('telefone', e.target.value)}
-                  maxLength={15}
-                  className="h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500/20"
-                />
-              </div>
-
-              {/* Data do Evento */}
-              <div className="space-y-2">
-                <Label className="text-slate-700 font-medium">
-                  Data do Evento
-                </Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full h-12 justify-start text-left font-normal border-slate-200",
-                        !dataEvento && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {dataEvento ? format(dataEvento, "dd/MM/yyyy", { locale: ptBR }) : "Selecione a data do evento"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={dataEvento}
-                      onSelect={setDataEvento}
-                      disabled={(date) => date < new Date()}
-                      initialFocus
-                      className="p-3 pointer-events-auto"
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              {/* Submit Button */}
+        {/* Success Card */}
+        {formSubmitted && (
+          <Card className="max-w-2xl mx-auto shadow-2xl border-0 bg-white/90 backdrop-blur-sm mb-8">
+            <CardHeader className="text-center pb-6">
+              <CardTitle className="text-2xl font-semibold text-green-600">
+                Formulário Enviado com Sucesso!
+              </CardTitle>
+              <CardDescription className="text-slate-600">
+                Você pode baixar o PDF com os dados preenchidos
+              </CardDescription>
+            </CardHeader>
+            
+            <CardContent className="text-center space-y-4">
               <Button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full h-12 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-medium rounded-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                onClick={generatePDF}
+                disabled={isGeneratingPDF}
+                className="w-full h-12 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-medium rounded-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
               >
-                {isSubmitting ? (
+                {isGeneratingPDF ? (
                   <div className="flex items-center">
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Enviando...
+                    Gerando PDF...
                   </div>
                 ) : (
                   <div className="flex items-center">
-                    <Send className="mr-2 h-4 w-4" />
-                    Enviar
+                    <Download className="mr-2 h-4 w-4" />
+                    Baixar PDF
                   </div>
                 )}
               </Button>
-            </form>
-          </CardContent>
-        </Card>
+              
+              <Button
+                onClick={handleReset}
+                variant="outline"
+                className="w-full h-12 border-slate-200 hover:bg-slate-50"
+              >
+                Preencher Novo Formulário
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Form Card */}
+        {!formSubmitted && (
+          <Card className="max-w-2xl mx-auto shadow-2xl border-0 bg-white/90 backdrop-blur-sm">
+            <CardHeader className="text-center pb-6">
+              <CardTitle className="text-2xl font-semibold text-slate-800">
+                Dados da Assinatura
+              </CardTitle>
+              <CardDescription className="text-slate-600">
+                Todas as informações são obrigatórias
+              </CardDescription>
+            </CardHeader>
+            
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Nome Completo */}
+                <div className="space-y-2">
+                  <Label htmlFor="nomeCompleto" className="text-slate-700 font-medium">
+                    Nome Completo
+                  </Label>
+                  <Input
+                    id="nomeCompleto"
+                    placeholder="Digite seu nome completo"
+                    value={formData.nomeCompleto}
+                    onChange={(e) => handleInputChange('nomeCompleto', e.target.value)}
+                    className="h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500/20"
+                  />
+                </div>
+
+                {/* CPF */}
+                <div className="space-y-2">
+                  <Label htmlFor="cpf" className="text-slate-700 font-medium">
+                    CPF
+                  </Label>
+                  <Input
+                    id="cpf"
+                    placeholder="000.000.000-00"
+                    value={formData.cpf}
+                    onChange={(e) => handleInputChange('cpf', e.target.value)}
+                    maxLength={14}
+                    className="h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500/20"
+                  />
+                </div>
+
+                {/* Data de Nascimento */}
+                <div className="space-y-2">
+                  <Label className="text-slate-700 font-medium">
+                    Data de Nascimento
+                  </Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full h-12 justify-start text-left font-normal border-slate-200",
+                          !dataNascimento && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {dataNascimento ? format(dataNascimento, "dd/MM/yyyy", { locale: ptBR }) : "Selecione a data"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={dataNascimento}
+                        onSelect={setDataNascimento}
+                        disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
+                        initialFocus
+                        className="p-3 pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                {/* Endereço */}
+                <div className="space-y-2">
+                  <Label htmlFor="endereco" className="text-slate-700 font-medium">
+                    Endereço
+                  </Label>
+                  <Input
+                    id="endereco"
+                    placeholder="Rua, número, complemento, bairro, cidade - UF"
+                    value={formData.endereco}
+                    onChange={(e) => handleInputChange('endereco', e.target.value)}
+                    className="h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500/20"
+                  />
+                </div>
+
+                {/* Telefone */}
+                <div className="space-y-2">
+                  <Label htmlFor="telefone" className="text-slate-700 font-medium">
+                    Telefone
+                  </Label>
+                  <Input
+                    id="telefone"
+                    placeholder="(00) 00000-0000"
+                    value={formData.telefone}
+                    onChange={(e) => handleInputChange('telefone', e.target.value)}
+                    maxLength={15}
+                    className="h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500/20"
+                  />
+                </div>
+
+                {/* Data do Evento */}
+                <div className="space-y-2">
+                  <Label className="text-slate-700 font-medium">
+                    Data do Evento
+                  </Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full h-12 justify-start text-left font-normal border-slate-200",
+                          !dataEvento && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {dataEvento ? format(dataEvento, "dd/MM/yyyy", { locale: ptBR }) : "Selecione a data do evento"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={dataEvento}
+                        onSelect={setDataEvento}
+                        disabled={(date) => date < new Date()}
+                        initialFocus
+                        className="p-3 pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                {/* Submit Button */}
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full h-12 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-medium rounded-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                >
+                  {isSubmitting ? (
+                    <div className="flex items-center">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Enviando...
+                    </div>
+                  ) : (
+                    <div className="flex items-center">
+                      <Send className="mr-2 h-4 w-4" />
+                      Enviar
+                    </div>
+                  )}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );
