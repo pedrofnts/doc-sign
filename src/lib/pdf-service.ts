@@ -11,7 +11,8 @@ interface PDFFormData {
   dataNascimento: Date;
   endereco: string;
   telefone: string;
-  dataEvento: Date;
+  dataEventoInicio: Date;
+  dataEventoFim: Date;
 }
 
 import { PDF_CONFIG, validatePDFConfig } from '@/config/pdf-config';
@@ -41,9 +42,11 @@ export class PDFService {
     const monthBirth = (formData.dataNascimento.getMonth() + 1).toString().padStart(2, '0');
     const yearBirth = formData.dataNascimento.getFullYear().toString();
     
-    const dayEvent = formData.dataEvento.getDate().toString().padStart(2, '0');
-    const monthEvent = formData.dataEvento.toLocaleDateString('pt-BR', { month: 'long' });
-    const yearEvent = formData.dataEvento.getFullYear().toString();
+    // Extrair informações das datas do evento
+    const dayEventStart = formData.dataEventoInicio.getDate().toString().padStart(2, '0');
+    const dayEventEnd = formData.dataEventoFim.getDate().toString().padStart(2, '0');
+    const monthEventStart = formData.dataEventoInicio.toLocaleDateString('pt-BR', { month: 'long' });
+    const yearEventStart = formData.dataEventoInicio.getFullYear().toString();
     
     // Extrair DDD e número do telefone
     const ddd = phoneNumbers.substring(0, 2);
@@ -98,26 +101,30 @@ export class PDFService {
         y: 308.63,
         pages: "0"
       },
+      // Dia inicial do evento
       {
-        text: dayEvent,
+        text: dayEventStart,
         x: 169.12,
         y: 164.38,
         pages: "0"
       },
+      // Dia final do evento
       {
-        text: dayEvent,
+        text: dayEventEnd,
         x: 216.62,
         y: 165.51,
         pages: "0"
       },
+      // Mês do evento
       {
-        text: monthEvent,
+        text: monthEventStart,
         x: 307,
         y: 164,
         pages: "0"
       },
+      // Ano do evento
       {
-        text: yearEvent,
+        text: yearEventStart,
         x: 441,
         y: 165.38,
         pages: "0"
@@ -181,7 +188,7 @@ export class PDFService {
     }
   }
 
-  async downloadPDF(url: string, filename: string = 'termo-responsabilidade.pdf'): Promise<void> {
+  async downloadPDF(url: string, filename: string = 'formulario-assinatura-elegante.pdf'): Promise<void> {
     try {
       const response = await fetch(url);
       

@@ -4,6 +4,28 @@
 
 **URL**: https://lovable.dev/projects/8beb02e7-7f2c-4644-866c-43dc3310d4b3
 
+## Funcionalidades
+
+Este projeto é um formulário de assinatura elegante que permite:
+
+- Preenchimento de dados pessoais
+- Geração automática de PDF preenchido
+- Download do formulário em PDF
+- Sistema de autenticação com diferentes níveis de acesso
+
+### Configuração do PDF
+
+O projeto utiliza a API PDF.co para gerar PDFs preenchidos. Para configurar:
+
+1. Obtenha uma API key gratuita em [PDF.co](https://pdf.co)
+2. Crie um arquivo `.env` na raiz do projeto:
+   ```env
+   VITE_PDF_CO_API_KEY=sua_api_key_aqui
+   ```
+3. O template PDF está hospedado no GitHub: `https://raw.githubusercontent.com/pedrofnts/assinatura-elegante-formulario/main/doc.pdf`
+
+Mais detalhes em `src/docs/PDF_SETUP.md`.
+
 ## How can I edit this code?
 
 There are several ways of editing your application.
@@ -59,6 +81,7 @@ This project is built with:
 - React
 - shadcn-ui
 - Tailwind CSS
+- PDF.co API (for PDF generation)
 
 ## How can I deploy this project?
 

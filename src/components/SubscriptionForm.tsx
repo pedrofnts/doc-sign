@@ -21,11 +21,12 @@ export const SubscriptionForm = ({ onBack }: SubscriptionFormProps) => {
   const [formData, setFormData] = useState({
     nomeCompleto: "",
     cpf: "",
+    dataNascimento: "",
     endereco: "",
     telefone: "",
   });
-  const [dataNascimento, setDataNascimento] = useState<Date>();
-  const [dataEvento, setDataEvento] = useState<Date>();
+  const [dataEventoInicio, setDataEventoInicio] = useState<Date>();
+  const [dataEventoFim, setDataEventoFim] = useState<Date>();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
@@ -50,6 +51,36 @@ export const SubscriptionForm = ({ onBack }: SubscriptionFormProps) => {
       .replace(/(-\d{4})\d+?$/, '$1');
   };
 
+  // Máscara para data DD/MM/YYYY
+  const formatDate = (value: string) => {
+    return value
+      .replace(/\D/g, '')
+      .replace(/(\d{2})(\d)/, '$1/$2')
+      .replace(/(\d{2})\/(\d{2})(\d)/, '$1/$2/$3')
+      .replace(/(\d{2})\/(\d{2})\/(\d{4})\d+?$/, '$1/$2/$3');
+  };
+
+  // Validar data no formato DD/MM/YYYY
+  const isValidDate = (dateString: string): boolean => {
+    if (dateString.length !== 10) return false;
+    
+    const [day, month, year] = dateString.split('/').map(Number);
+    const date = new Date(year, month - 1, day);
+    
+    return date.getFullYear() === year &&
+           date.getMonth() === month - 1 &&
+           date.getDate() === day &&
+           day >= 1 && day <= 31 &&
+           month >= 1 && month <= 12 &&
+           year >= 1900 && year <= new Date().getFullYear();
+  };
+
+  // Converter string DD/MM/YYYY para Date
+  const parseDate = (dateString: string): Date => {
+    const [day, month, year] = dateString.split('/').map(Number);
+    return new Date(year, month - 1, day);
+  };
+
   const handleInputChange = (field: string, value: string) => {
     let formattedValue = value;
     
@@ -57,6 +88,8 @@ export const SubscriptionForm = ({ onBack }: SubscriptionFormProps) => {
       formattedValue = formatCPF(value);
     } else if (field === 'telefone') {
       formattedValue = formatPhone(value);
+    } else if (field === 'dataNascimento') {
+      formattedValue = formatDate(value);
     }
     
     setFormData(prev => ({
@@ -68,18 +101,24 @@ export const SubscriptionForm = ({ onBack }: SubscriptionFormProps) => {
   const validateForm = () => {
     if (!formData.nomeCompleto.trim()) return "Nome completo é obrigatório";
     if (!formData.cpf.replace(/\D/g, '') || formData.cpf.replace(/\D/g, '').length !== 11) return "CPF inválido";
-    if (!dataNascimento) return "Data de nascimento é obrigatória";
+    if (!formData.dataNascimento) return "Data de nascimento é obrigatória";
+    if (!isValidDate(formData.dataNascimento)) return "Data de nascimento inválida";
     if (!formData.endereco.trim()) return "Endereço é obrigatório";
     if (!formData.telefone.replace(/\D/g, '') || formData.telefone.replace(/\D/g, '').length < 10) return "Telefone inválido";
-    if (!dataEvento) return "Data do evento é obrigatória";
+    if (!dataEventoInicio) return "Data de início do evento é obrigatória";
+    if (!dataEventoFim) return "Data de fim do evento é obrigatória";
+    
+    // Verificar se a data de início é anterior à data de fim
+    if (dataEventoInicio > dataEventoFim) return "Data de início deve ser anterior à data de fim";
+    
     return null;
   };
 
   const generatePDF = async () => {
-    if (!dataNascimento || !dataEvento) {
+    if (!formData.dataNascimento || !dataEventoInicio || !dataEventoFim) {
       toast({
         title: "Erro",
-        description: "Data de nascimento e data do evento são obrigatórias para gerar o PDF.",
+        description: "Todas as datas são obrigatórias para gerar o PDF.",
         variant: "destructive",
       });
       return;
@@ -93,18 +132,19 @@ export const SubscriptionForm = ({ onBack }: SubscriptionFormProps) => {
       const pdfFormData = {
         nomeCompleto: formData.nomeCompleto,
         cpf: formData.cpf,
-        dataNascimento: dataNascimento,
+        dataNascimento: parseDate(formData.dataNascimento),
         endereco: formData.endereco,
         telefone: formData.telefone,
-        dataEvento: dataEvento,
+        dataEventoInicio: dataEventoInicio,
+        dataEventoFim: dataEventoFim,
       };
       
       const pdfUrl = await pdfService.generatePDF(pdfFormData);
-      await pdfService.downloadPDF(pdfUrl, 'termo-responsabilidade-desafio-top.pdf');
+      await pdfService.downloadPDF(pdfUrl, 'formulario-assinatura-elegante.pdf');
       
       toast({
         title: "PDF gerado com sucesso!",
-        description: "O termo de responsabilidade foi baixado para o seu dispositivo.",
+        description: "O formulário preenchido foi baixado para o seu dispositivo.",
       });
     } catch (error) {
       console.error('Erro ao gerar PDF:', error);
@@ -149,11 +189,12 @@ export const SubscriptionForm = ({ onBack }: SubscriptionFormProps) => {
     setFormData({
       nomeCompleto: "",
       cpf: "",
+      dataNascimento: "",
       endereco: "",
       telefone: "",
     });
-    setDataNascimento(undefined);
-    setDataEvento(undefined);
+    setDataEventoInicio(undefined);
+    setDataEventoFim(undefined);
     setFormSubmitted(false);
   };
 
@@ -261,33 +302,17 @@ export const SubscriptionForm = ({ onBack }: SubscriptionFormProps) => {
 
                 {/* Data de Nascimento */}
                 <div className="space-y-2">
-                  <Label className="text-slate-700 font-medium">
+                  <Label htmlFor="dataNascimento" className="text-slate-700 font-medium">
                     Data de Nascimento
                   </Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-full h-12 justify-start text-left font-normal border-slate-200",
-                          !dataNascimento && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {dataNascimento ? format(dataNascimento, "dd/MM/yyyy", { locale: ptBR }) : "Selecione a data"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={dataNascimento}
-                        onSelect={setDataNascimento}
-                        disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
-                        initialFocus
-                        className="p-3 pointer-events-auto"
-                      />
-                    </PopoverContent>
-                  </Popover>
+                  <Input
+                    id="dataNascimento"
+                    placeholder="DD/MM/AAAA"
+                    value={formData.dataNascimento}
+                    onChange={(e) => handleInputChange('dataNascimento', e.target.value)}
+                    maxLength={10}
+                    className="h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500/20"
+                  />
                 </div>
 
                 {/* Endereço */}
@@ -319,10 +344,10 @@ export const SubscriptionForm = ({ onBack }: SubscriptionFormProps) => {
                   />
                 </div>
 
-                {/* Data do Evento */}
+                {/* Data de Início do Evento */}
                 <div className="space-y-2">
                   <Label className="text-slate-700 font-medium">
-                    Data do Evento
+                    Data de Início do Evento
                   </Label>
                   <Popover>
                     <PopoverTrigger asChild>
@@ -330,18 +355,49 @@ export const SubscriptionForm = ({ onBack }: SubscriptionFormProps) => {
                         variant="outline"
                         className={cn(
                           "w-full h-12 justify-start text-left font-normal border-slate-200",
-                          !dataEvento && "text-muted-foreground"
+                          !dataEventoInicio && "text-muted-foreground"
                         )}
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {dataEvento ? format(dataEvento, "dd/MM/yyyy", { locale: ptBR }) : "Selecione a data do evento"}
+                        {dataEventoInicio ? format(dataEventoInicio, "dd/MM/yyyy", { locale: ptBR }) : "Selecione a data de início"}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
                       <Calendar
                         mode="single"
-                        selected={dataEvento}
-                        onSelect={setDataEvento}
+                        selected={dataEventoInicio}
+                        onSelect={setDataEventoInicio}
+                        disabled={(date) => date < new Date()}
+                        initialFocus
+                        className="p-3 pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                {/* Data de Fim do Evento */}
+                <div className="space-y-2">
+                  <Label className="text-slate-700 font-medium">
+                    Data de Fim do Evento
+                  </Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full h-12 justify-start text-left font-normal border-slate-200",
+                          !dataEventoFim && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {dataEventoFim ? format(dataEventoFim, "dd/MM/yyyy", { locale: ptBR }) : "Selecione a data de fim"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={dataEventoFim}
+                        onSelect={setDataEventoFim}
                         disabled={(date) => date < new Date()}
                         initialFocus
                         className="p-3 pointer-events-auto"
