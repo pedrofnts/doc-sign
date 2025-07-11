@@ -2,13 +2,11 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { PlusCircle, Shield } from "lucide-react";
+import { PlusCircle } from "lucide-react";
 import { SubscriptionForm } from "@/components/SubscriptionForm";
-import { useNavigate } from "react-router-dom";
 
 const Index = () => {
   const [showForm, setShowForm] = useState(false);
-  const navigate = useNavigate();
 
   if (showForm) {
     return <SubscriptionForm onBack={() => setShowForm(false)} />;
@@ -19,28 +17,12 @@ const Index = () => {
       <div className="container mx-auto px-4 py-16">
         {/* Header */}
         <div className="text-center mb-16">
-          <div className="flex justify-between items-center mb-8">
-            <div className="flex-1"></div>
-            <div className="flex-1 text-center">
-              <h1 className="text-5xl font-bold text-slate-800 mb-4">
-                Sistema de Assinaturas
-              </h1>
-              <p className="text-xl text-slate-600 max-w-2xl mx-auto">
-                Gerencie suas assinaturas de forma simples e eficiente
-              </p>
-            </div>
-            <div className="flex-1 flex justify-end">
-              <Button
-                onClick={() => navigate('/login')}
-                variant="outline"
-                size="sm"
-                className="bg-white/80 hover:bg-white border-slate-300"
-              >
-                <Shield className="w-4 h-4 mr-2" />
-                Área Admin
-              </Button>
-            </div>
-          </div>
+          <h1 className="text-5xl font-bold text-slate-800 mb-4">
+            Track Outdoor
+          </h1>
+          <p className="text-xl text-slate-600 max-w-2xl mx-auto">
+            Gerencie suas assinaturas de forma simples e eficiente
+          </p>
         </div>
 
         {/* Main Action */}
