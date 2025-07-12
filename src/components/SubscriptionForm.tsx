@@ -261,14 +261,32 @@ export const SubscriptionForm = ({ onBack }: SubscriptionFormProps) => {
           <Card className="shadow-2xl border-0 bg-white/90 backdrop-blur-sm">
             <CardHeader className="text-center pb-6">
               <CardTitle className="text-xl md:text-2xl font-semibold text-green-600">
-                Formulário Enviado com Sucesso!
+                Documento Gerado com Sucesso!
               </CardTitle>
               <CardDescription className="text-slate-600">
                 Você pode baixar o PDF com os dados preenchidos
               </CardDescription>
             </CardHeader>
             
-            <CardContent className="text-center space-y-4">
+            <CardContent className="text-center space-y-6">
+              {/* Gov.br Notice */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-center justify-center mb-3">
+                  <img 
+                    src="/images/govbr.webp" 
+                    alt="gov.br" 
+                    className="h-8 w-auto"
+                  />
+                </div>
+                <h3 className="font-semibold text-blue-900 mb-2">
+                  Próximo Passo: Assinatura Digital
+                </h3>
+                <p className="text-sm text-blue-800 leading-relaxed">
+                  Para finalizar o processo, você precisará assinar o documento digitalmente através do portal <strong>gov.br</strong>. 
+                  Após baixar o PDF, acesse o portal para realizar a assinatura eletrônica.
+                </p>
+              </div>
+
               <Button
                 onClick={generatePDF}
                 disabled={isGeneratingPDF}

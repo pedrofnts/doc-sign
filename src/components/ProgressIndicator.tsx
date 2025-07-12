@@ -20,14 +20,14 @@ export const ProgressIndicator = ({ currentStep, onBack }: ProgressIndicatorProp
   const currentStepIndex = getCurrentStepIndex();
 
   return (
-    <div className="w-full max-w-md mx-auto mb-6">
+    <div className="w-full max-w-md mx-auto mb-4 md:mb-6">
       {/* Mobile Back Button */}
       {currentStepIndex > 0 && onBack && (
-        <div className="mb-4 md:hidden">
+        <div className="mb-3 md:hidden">
           <Button
             variant="ghost"
             onClick={onBack}
-            className="text-slate-600 hover:text-slate-800 hover:bg-white/50"
+            className="text-slate-600 hover:text-slate-800 hover:bg-white/50 -ml-2"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Voltar
