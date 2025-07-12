@@ -1,4 +1,4 @@
-# Welcome to your Lovable project
+# Track Outdoor
 
 ## Project info
 
@@ -6,12 +6,12 @@
 
 ## Funcionalidades
 
-Este projeto é um formulário de assinatura elegante que permite:
+O Track Outdoor é um sistema de formulário para assinaturas que permite:
 
 - Preenchimento de dados pessoais
 - Geração automática de PDF preenchido
 - Download do formulário em PDF
-- Sistema de autenticação com diferentes níveis de acesso
+- Interface limpa e focada
 
 ### Configuração do PDF
 

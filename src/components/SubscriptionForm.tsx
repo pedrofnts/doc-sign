@@ -12,12 +12,17 @@ import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { getPDFService } from "@/lib/pdf-service";
+import { ConfirmationStep } from "./ConfirmationStep";
+import { ProgressIndicator } from "./ProgressIndicator";
 
 interface SubscriptionFormProps {
   onBack: () => void;
 }
 
+type FormStep = 'form' | 'confirmation' | 'success';
+
 export const SubscriptionForm = ({ onBack }: SubscriptionFormProps) => {
+  const [currentStep, setCurrentStep] = useState<FormStep>('form');
   const [formData, setFormData] = useState({
     nomeCompleto: "",
     cpf: "",
@@ -28,7 +33,6 @@ export const SubscriptionForm = ({ onBack }: SubscriptionFormProps) => {
   const [dataEventoInicio, setDataEventoInicio] = useState<Date>();
   const [dataEventoFim, setDataEventoFim] = useState<Date>();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formSubmitted, setFormSubmitted] = useState(false);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
   // Máscara para CPF
@@ -158,7 +162,7 @@ export const SubscriptionForm = ({ onBack }: SubscriptionFormProps) => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     const validationError = validateForm();
@@ -171,18 +175,32 @@ export const SubscriptionForm = ({ onBack }: SubscriptionFormProps) => {
       return;
     }
 
+    // Prosseguir para a tela de confirmação
+    setCurrentStep('confirmation');
+  };
+
+  const handleConfirmSubmit = async () => {
     setIsSubmitting(true);
     
-    // Simular envio
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    toast({
-      title: "Assinatura criada com sucesso!",
-      description: "Sua nova assinatura foi registrada no sistema.",
-    });
-    
-    setIsSubmitting(false);
-    setFormSubmitted(true);
+    try {
+      // Simular envio para API
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      toast({
+        title: "Assinatura criada com sucesso!",
+        description: "Sua nova assinatura foi registrada no sistema.",
+      });
+      
+      setCurrentStep('success');
+    } catch (error) {
+      toast({
+        title: "Erro ao enviar",
+        description: "Ocorreu um erro ao enviar os dados. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleReset = () => {
@@ -195,31 +213,54 @@ export const SubscriptionForm = ({ onBack }: SubscriptionFormProps) => {
     });
     setDataEventoInicio(undefined);
     setDataEventoFim(undefined);
-    setFormSubmitted(false);
+    setCurrentStep('form');
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <Button
-            variant="ghost"
-            onClick={onBack}
-            className="mb-4 text-slate-600 hover:text-slate-800 hover:bg-white/50"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Voltar
-          </Button>
-          <h1 className="text-4xl font-bold text-slate-800 mb-2">Nova Assinatura</h1>
-          <p className="text-slate-600">Preencha os dados abaixo para criar sua nova assinatura</p>
-        </div>
+  const handleBackToForm = () => {
+    setCurrentStep('form');
+  };
 
-        {/* Success Card */}
-        {formSubmitted && (
-          <Card className="max-w-2xl mx-auto shadow-2xl border-0 bg-white/90 backdrop-blur-sm mb-8">
+  const handleEditFromConfirmation = () => {
+    setCurrentStep('form');
+  };
+
+  // Render based on current step
+  if (currentStep === 'confirmation') {
+    return (
+      <ConfirmationStep
+        formData={formData}
+        dataEventoInicio={dataEventoInicio!}
+        dataEventoFim={dataEventoFim!}
+        onBack={handleBackToForm}
+        onConfirm={handleConfirmSubmit}
+        onEdit={handleEditFromConfirmation}
+        isSubmitting={isSubmitting}
+      />
+    );
+  }
+
+  if (currentStep === 'success') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 px-4 py-4 md:py-6">
+        <div className="max-w-2xl mx-auto">
+          {/* Header - apenas em desktop */}
+          <div className="mb-6 hidden md:block">
+            <Button
+              variant="ghost"
+              onClick={onBack}
+              className="mb-4 text-slate-600 hover:text-slate-800 hover:bg-white/50"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Voltar
+            </Button>
+          </div>
+          
+          {/* Progress Indicator */}
+          <ProgressIndicator currentStep="success" onBack={onBack} />
+          
+          <Card className="shadow-2xl border-0 bg-white/90 backdrop-blur-sm">
             <CardHeader className="text-center pb-6">
-              <CardTitle className="text-2xl font-semibold text-green-600">
+              <CardTitle className="text-xl md:text-2xl font-semibold text-green-600">
                 Formulário Enviado com Sucesso!
               </CardTitle>
               <CardDescription className="text-slate-600">
@@ -255,179 +296,192 @@ export const SubscriptionForm = ({ onBack }: SubscriptionFormProps) => {
               </Button>
             </CardContent>
           </Card>
-        )}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 px-4 py-4 md:py-6">
+      <div className="max-w-2xl mx-auto">
+        {/* Header - apenas em desktop */}
+        <div className="mb-6 hidden md:block">
+          <Button
+            variant="ghost"
+            onClick={onBack}
+            className="mb-4 text-slate-600 hover:text-slate-800 hover:bg-white/50"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Voltar
+          </Button>
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-slate-800 mb-2">Nova Assinatura</h1>
+          <p className="text-slate-600 text-sm md:text-base">Preencha os dados abaixo para criar sua nova assinatura</p>
+        </div>
+
+        {/* Progress Indicator */}
+        <ProgressIndicator currentStep="form" onBack={onBack} />
 
         {/* Form Card */}
-        {!formSubmitted && (
-          <Card className="max-w-2xl mx-auto shadow-2xl border-0 bg-white/90 backdrop-blur-sm">
-            <CardHeader className="text-center pb-6">
-              <CardTitle className="text-2xl font-semibold text-slate-800">
-                Dados da Assinatura
-              </CardTitle>
-              <CardDescription className="text-slate-600">
-                Todas as informações são obrigatórias
-              </CardDescription>
-            </CardHeader>
-            
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Nome Completo */}
-                <div className="space-y-2">
-                  <Label htmlFor="nomeCompleto" className="text-slate-700 font-medium">
-                    Nome Completo
-                  </Label>
-                  <Input
-                    id="nomeCompleto"
-                    placeholder="Digite seu nome completo"
-                    value={formData.nomeCompleto}
-                    onChange={(e) => handleInputChange('nomeCompleto', e.target.value)}
-                    className="h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500/20"
-                  />
-                </div>
+        <Card className="shadow-2xl border-0 bg-white/90 backdrop-blur-sm">
+          <CardHeader className="text-center pb-6">
+            <CardTitle className="text-lg md:text-xl font-semibold text-slate-800">
+              Dados da Assinatura
+            </CardTitle>
+            <CardDescription className="text-slate-600 text-sm md:text-base">
+              Todas as informações são obrigatórias
+            </CardDescription>
+          </CardHeader>
+          
+          <CardContent>
+            <form onSubmit={handleFormSubmit} className="space-y-6">
+              {/* Nome Completo */}
+              <div className="space-y-2">
+                <Label htmlFor="nomeCompleto" className="text-slate-700 font-medium text-sm md:text-base">
+                  Nome Completo
+                </Label>
+                <Input
+                  id="nomeCompleto"
+                  placeholder="Digite seu nome completo"
+                  value={formData.nomeCompleto}
+                  onChange={(e) => handleInputChange('nomeCompleto', e.target.value)}
+                  className="h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500/20 text-sm md:text-base"
+                />
+              </div>
 
-                {/* CPF */}
-                <div className="space-y-2">
-                  <Label htmlFor="cpf" className="text-slate-700 font-medium">
-                    CPF
-                  </Label>
-                  <Input
-                    id="cpf"
-                    placeholder="000.000.000-00"
-                    value={formData.cpf}
-                    onChange={(e) => handleInputChange('cpf', e.target.value)}
-                    maxLength={14}
-                    className="h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500/20"
-                  />
-                </div>
+              {/* CPF */}
+              <div className="space-y-2">
+                <Label htmlFor="cpf" className="text-slate-700 font-medium text-sm md:text-base">
+                  CPF
+                </Label>
+                <Input
+                  id="cpf"
+                  placeholder="000.000.000-00"
+                  value={formData.cpf}
+                  onChange={(e) => handleInputChange('cpf', e.target.value)}
+                  maxLength={14}
+                  className="h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500/20 text-sm md:text-base"
+                />
+              </div>
 
-                {/* Data de Nascimento */}
-                <div className="space-y-2">
-                  <Label htmlFor="dataNascimento" className="text-slate-700 font-medium">
-                    Data de Nascimento
-                  </Label>
-                  <Input
-                    id="dataNascimento"
-                    placeholder="DD/MM/AAAA"
-                    value={formData.dataNascimento}
-                    onChange={(e) => handleInputChange('dataNascimento', e.target.value)}
-                    maxLength={10}
-                    className="h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500/20"
-                  />
-                </div>
+              {/* Data de Nascimento */}
+              <div className="space-y-2">
+                <Label htmlFor="dataNascimento" className="text-slate-700 font-medium text-sm md:text-base">
+                  Data de Nascimento
+                </Label>
+                <Input
+                  id="dataNascimento"
+                  placeholder="DD/MM/AAAA"
+                  value={formData.dataNascimento}
+                  onChange={(e) => handleInputChange('dataNascimento', e.target.value)}
+                  maxLength={10}
+                  className="h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500/20 text-sm md:text-base"
+                />
+              </div>
 
-                {/* Endereço */}
-                <div className="space-y-2">
-                  <Label htmlFor="endereco" className="text-slate-700 font-medium">
-                    Endereço
-                  </Label>
-                  <Input
-                    id="endereco"
-                    placeholder="Rua, número, complemento, bairro, cidade - UF"
-                    value={formData.endereco}
-                    onChange={(e) => handleInputChange('endereco', e.target.value)}
-                    className="h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500/20"
-                  />
-                </div>
+              {/* Endereço */}
+              <div className="space-y-2">
+                <Label htmlFor="endereco" className="text-slate-700 font-medium text-sm md:text-base">
+                  Endereço
+                </Label>
+                <Input
+                  id="endereco"
+                  placeholder="Rua, número, complemento, bairro, cidade - UF"
+                  value={formData.endereco}
+                  onChange={(e) => handleInputChange('endereco', e.target.value)}
+                  className="h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500/20 text-sm md:text-base"
+                />
+              </div>
 
-                {/* Telefone */}
-                <div className="space-y-2">
-                  <Label htmlFor="telefone" className="text-slate-700 font-medium">
-                    Telefone
-                  </Label>
-                  <Input
-                    id="telefone"
-                    placeholder="(00) 00000-0000"
-                    value={formData.telefone}
-                    onChange={(e) => handleInputChange('telefone', e.target.value)}
-                    maxLength={15}
-                    className="h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500/20"
-                  />
-                </div>
+              {/* Telefone */}
+              <div className="space-y-2">
+                <Label htmlFor="telefone" className="text-slate-700 font-medium text-sm md:text-base">
+                  Telefone
+                </Label>
+                <Input
+                  id="telefone"
+                  placeholder="(00) 00000-0000"
+                  value={formData.telefone}
+                  onChange={(e) => handleInputChange('telefone', e.target.value)}
+                  maxLength={15}
+                  className="h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500/20 text-sm md:text-base"
+                />
+              </div>
 
-                {/* Data de Início do Evento */}
-                <div className="space-y-2">
-                  <Label className="text-slate-700 font-medium">
-                    Data de Início do Evento
-                  </Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-full h-12 justify-start text-left font-normal border-slate-200",
-                          !dataEventoInicio && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {dataEventoInicio ? format(dataEventoInicio, "dd/MM/yyyy", { locale: ptBR }) : "Selecione a data de início"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={dataEventoInicio}
-                        onSelect={setDataEventoInicio}
-                        disabled={(date) => date < new Date()}
-                        initialFocus
-                        className="p-3 pointer-events-auto"
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
+              {/* Data de Início do Evento */}
+              <div className="space-y-2">
+                <Label className="text-slate-700 font-medium text-sm md:text-base">
+                  Data de Início do Evento
+                </Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full h-12 justify-start text-left font-normal border-slate-200 text-sm md:text-base",
+                        !dataEventoInicio && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {dataEventoInicio ? format(dataEventoInicio, "dd/MM/yyyy", { locale: ptBR }) : "Selecione a data de início"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={dataEventoInicio}
+                      onSelect={setDataEventoInicio}
+                      disabled={(date) => date < new Date()}
+                      initialFocus
+                      className="p-3 pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
 
-                {/* Data de Fim do Evento */}
-                <div className="space-y-2">
-                  <Label className="text-slate-700 font-medium">
-                    Data de Fim do Evento
-                  </Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-full h-12 justify-start text-left font-normal border-slate-200",
-                          !dataEventoFim && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {dataEventoFim ? format(dataEventoFim, "dd/MM/yyyy", { locale: ptBR }) : "Selecione a data de fim"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={dataEventoFim}
-                        onSelect={setDataEventoFim}
-                        disabled={(date) => date < new Date()}
-                        initialFocus
-                        className="p-3 pointer-events-auto"
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
+              {/* Data de Fim do Evento */}
+              <div className="space-y-2">
+                <Label className="text-slate-700 font-medium text-sm md:text-base">
+                  Data de Fim do Evento
+                </Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full h-12 justify-start text-left font-normal border-slate-200 text-sm md:text-base",
+                        !dataEventoFim && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {dataEventoFim ? format(dataEventoFim, "dd/MM/yyyy", { locale: ptBR }) : "Selecione a data de fim"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={dataEventoFim}
+                      onSelect={setDataEventoFim}
+                      disabled={(date) => date < new Date()}
+                      initialFocus
+                      className="p-3 pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
 
-                {/* Submit Button */}
-                <Button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full h-12 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-medium rounded-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-                >
-                  {isSubmitting ? (
-                    <div className="flex items-center">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Enviando...
-                    </div>
-                  ) : (
-                    <div className="flex items-center">
-                      <Send className="mr-2 h-4 w-4" />
-                      Enviar
-                    </div>
-                  )}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-        )}
+              {/* Submit Button */}
+              <Button
+                type="submit"
+                className="w-full h-12 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-medium rounded-lg transition-all duration-300 transform hover:scale-105 text-sm md:text-base"
+              >
+                <div className="flex items-center">
+                  <Send className="mr-2 h-4 w-4" />
+                  Continuar
+                </div>
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

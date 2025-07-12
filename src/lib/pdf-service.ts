@@ -130,7 +130,7 @@ export class PDFService {
         pages: "0"
       },
       {
-        text: "São Paulo",
+        text: "Salvador/BA",
         x: 106.75,
         y: 367.88,
         pages: "4"
