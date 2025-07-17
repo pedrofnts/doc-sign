@@ -34,10 +34,10 @@ const Index = () => {
                 <PlusCircle className="w-6 h-6 md:w-8 md:h-8 text-white" />
               </div>
               <CardTitle className="text-xl md:text-2xl font-semibold text-slate-800">
-                Nova Assinatura
+                Novo Termo
               </CardTitle>
               <CardDescription className="text-slate-600 text-sm md:text-base">
-                Crie uma nova assinatura para o evento
+                Crie um novo termo de responsabilidade para o evento
               </CardDescription>
             </CardHeader>
             <CardContent className="text-center">

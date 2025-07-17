@@ -187,8 +187,8 @@ export const SubscriptionForm = ({ onBack }: SubscriptionFormProps) => {
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       toast({
-        title: "Assinatura criada com sucesso!",
-        description: "Sua nova assinatura foi registrada no sistema.",
+        title: "Termo criado com sucesso!",
+        description: "Seu termo foi registrado no sistema.",
       });
       
       setCurrentStep('success');
@@ -332,8 +332,8 @@ export const SubscriptionForm = ({ onBack }: SubscriptionFormProps) => {
             <ArrowLeft className="mr-2 h-4 w-4" />
             Voltar
           </Button>
-          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-slate-800 mb-2">Nova Assinatura</h1>
-          <p className="text-slate-600 text-sm md:text-base">Preencha os dados abaixo para criar sua nova assinatura</p>
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-slate-800 mb-2">Nova Termo</h1>
+          <p className="text-slate-600 text-sm md:text-base">Preencha os dados abaixo para criar seu termo de responsabilidade</p>
         </div>
 
         {/* Progress Indicator */}
