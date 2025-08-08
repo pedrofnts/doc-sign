@@ -19,7 +19,7 @@ export const PDF_CONFIG = {
 // Validation helper
 export const validatePDFConfig = (): boolean => {
   if (PDF_CONFIG.API_KEY === 'INSERT_YOUR_API_KEY_HERE') {
-    console.warn('PDF.co API key not configured. Please set VITE_PDF_CO_API_KEY environment variable.');
+    console.warn('PDF.co API key not configured. Please se VITE_PDF_CO_API_KEY environment variable.');
     return false;
   }
   
