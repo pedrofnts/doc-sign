@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Check, Edit, User, Phone, MapPin, Hash, Calendar } from "lucide-react";
+import { ArrowLeft, Check, Edit, User, Phone, MapPin, Hash, Calendar, Mail, Heart } from "lucide-react";
 import { ProgressIndicator } from "./ProgressIndicator";
 
 interface FormData {
@@ -9,6 +9,8 @@ interface FormData {
   dataNascimento: string;
   endereco: string;
   telefone: string;
+  email: string;
+  estadoCivil: string;
 }
 
 interface ConfirmationStepProps {
@@ -133,10 +135,28 @@ export const ConfirmationStep = ({
                     </p>
                   </div>
                 </div>
+
+                <div className="flex items-start space-x-3">
+                  <Mail className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-slate-600 mb-1">E-mail</p>
+                    <p className="text-slate-800 font-medium break-words">
+                      {formData.email}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-3">
+                  <Heart className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-slate-600 mb-1">Estado Civil</p>
+                    <p className="text-slate-800 font-medium">
+                      {formData.estadoCivil}
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
-
-
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-3 pt-4">

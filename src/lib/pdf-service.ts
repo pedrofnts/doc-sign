@@ -11,10 +11,8 @@ interface PDFFormData {
   dataNascimento: Date;
   endereco: string;
   telefone: string;
-  email?: string;
-  estadoCivil?: string;
-  dataEventoInicio?: Date;
-  dataEventoFim?: Date;
+  email: string;
+  estadoCivil: string;
 }
 
 import { PDF_CONFIG, validatePDFConfig } from '@/config/pdf-config';
@@ -68,7 +66,7 @@ export class PDFService {
         pages: "0"
       },
       {
-        text: formData.estadoCivil || "Solteiro(a)",
+        text: formData.estadoCivil,
         x: 131.35,
         y: 151.83,
         pages: "0"
@@ -86,7 +84,7 @@ export class PDFService {
         pages: "0"
       },
       {
-        text: formData.email || (formData.nomeCompleto.toLowerCase().replace(/\s+/g, '') + "@email.com"),
+        text: formData.email,
         x: 108.18,
         y: 210.65,
         pages: "0"

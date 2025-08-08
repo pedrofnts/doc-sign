@@ -25,6 +25,8 @@ export const SubscriptionForm = ({ onBack }: SubscriptionFormProps) => {
     dataNascimento: "",
     endereco: "",
     telefone: "",
+    email: "",
+    estadoCivil: "",
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -104,6 +106,9 @@ export const SubscriptionForm = ({ onBack }: SubscriptionFormProps) => {
     if (!isValidDate(formData.dataNascimento)) return "Data de nascimento inválida";
     if (!formData.endereco.trim()) return "Endereço é obrigatório";
     if (!formData.telefone.replace(/\D/g, '') || formData.telefone.replace(/\D/g, '').length < 10) return "Telefone inválido";
+    if (!formData.email.trim()) return "E-mail é obrigatório";
+    if (!formData.email.includes('@') || !formData.email.includes('.')) return "E-mail inválido";
+    if (!formData.estadoCivil.trim()) return "Estado civil é obrigatório";
     
     return null;
   };
@@ -129,6 +134,8 @@ export const SubscriptionForm = ({ onBack }: SubscriptionFormProps) => {
         dataNascimento: parseDate(formData.dataNascimento),
         endereco: formData.endereco,
         telefone: formData.telefone,
+        email: formData.email,
+        estadoCivil: formData.estadoCivil,
       };
       
       const pdfUrl = await pdfService.generatePDF(pdfFormData);
@@ -198,6 +205,8 @@ export const SubscriptionForm = ({ onBack }: SubscriptionFormProps) => {
       dataNascimento: "",
       endereco: "",
       telefone: "",
+      email: "",
+      estadoCivil: "",
     });
 
     setCurrentStep('form');
@@ -410,7 +419,40 @@ export const SubscriptionForm = ({ onBack }: SubscriptionFormProps) => {
                 />
               </div>
 
+              {/* E-mail */}
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-slate-700 font-medium text-sm md:text-base">
+                  E-mail
+                </Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="seu.email@exemplo.com"
+                  value={formData.email}
+                  onChange={(e) => handleInputChange('email', e.target.value)}
+                  className="h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500/20 text-sm md:text-base"
+                />
+              </div>
 
+              {/* Estado Civil */}
+              <div className="space-y-2">
+                <Label htmlFor="estadoCivil" className="text-slate-700 font-medium text-sm md:text-base">
+                  Estado Civil
+                </Label>
+                <select
+                  id="estadoCivil"
+                  value={formData.estadoCivil}
+                  onChange={(e) => handleInputChange('estadoCivil', e.target.value)}
+                  className="w-full h-12 px-3 border border-slate-200 rounded-md focus:border-blue-500 focus:ring-blue-500/20 text-sm md:text-base bg-white"
+                >
+                  <option value="">Selecione seu estado civil</option>
+                  <option value="Solteiro(a)">Solteiro(a)</option>
+                  <option value="Casado(a)">Casado(a)</option>
+                  <option value="Divorciado(a)">Divorciado(a)</option>
+                  <option value="Viúvo(a)">Viúvo(a)</option>
+                  <option value="União Estável">União Estável</option>
+                </select>
+              </div>
 
               {/* Submit Button */}
               <Button
