@@ -187,5 +187,3 @@ export const getPDFService = (): PDFService => {
 };
 
 export default PDFService; 
-export default PDFService; 
-export default PDFService; 
