@@ -1,4 +1,4 @@
-# Track Outdoor
+# Legendários
 
 ## Project info
 
@@ -6,7 +6,7 @@
 
 ## Funcionalidades
 
-O Track Outdoor é um sistema de formulário para assinaturas que permite:
+O Legendários é um sistema de formulário para assinaturas que permite:
 
 - Preenchimento de dados pessoais
 - Geração automática de PDF preenchido

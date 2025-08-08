@@ -1,8 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Check, Edit, CalendarIcon, User, Phone, MapPin, Hash, Calendar } from "lucide-react";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { ArrowLeft, Check, Edit, User, Phone, MapPin, Hash, Calendar } from "lucide-react";
 import { ProgressIndicator } from "./ProgressIndicator";
 
 interface FormData {
@@ -15,8 +13,6 @@ interface FormData {
 
 interface ConfirmationStepProps {
   formData: FormData;
-  dataEventoInicio: Date;
-  dataEventoFim: Date;
   onBack: () => void;
   onConfirm: () => void;
   onEdit: () => void;
@@ -25,8 +21,6 @@ interface ConfirmationStepProps {
 
 export const ConfirmationStep = ({
   formData,
-  dataEventoInicio,
-  dataEventoFim,
   onBack,
   onConfirm,
   onEdit,
@@ -142,34 +136,7 @@ export const ConfirmationStep = ({
               </div>
             </div>
 
-            {/* Event Information */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-slate-800 border-b border-slate-200 pb-2">
-                Dados do Evento
-              </h3>
-              
-              <div className="grid gap-4">
-                <div className="flex items-start space-x-3">
-                  <CalendarIcon className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-slate-600 mb-1">Data de Início</p>
-                    <p className="text-slate-800 font-medium">
-                      {format(dataEventoInicio, "dd/MM/yyyy", { locale: ptBR })}
-                    </p>
-                  </div>
-                </div>
 
-                <div className="flex items-start space-x-3">
-                  <CalendarIcon className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-slate-600 mb-1">Data de Fim</p>
-                    <p className="text-slate-800 font-medium">
-                      {format(dataEventoFim, "dd/MM/yyyy", { locale: ptBR })}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-3 pt-4">

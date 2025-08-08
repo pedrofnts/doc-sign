@@ -4,11 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ArrowLeft, CalendarIcon, Send, Download } from "lucide-react";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { ArrowLeft, Send, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { getPDFService } from "@/lib/pdf-service";
@@ -30,8 +26,7 @@ export const SubscriptionForm = ({ onBack }: SubscriptionFormProps) => {
     endereco: "",
     telefone: "",
   });
-  const [dataEventoInicio, setDataEventoInicio] = useState<Date>();
-  const [dataEventoFim, setDataEventoFim] = useState<Date>();
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
@@ -109,20 +104,15 @@ export const SubscriptionForm = ({ onBack }: SubscriptionFormProps) => {
     if (!isValidDate(formData.dataNascimento)) return "Data de nascimento inválida";
     if (!formData.endereco.trim()) return "Endereço é obrigatório";
     if (!formData.telefone.replace(/\D/g, '') || formData.telefone.replace(/\D/g, '').length < 10) return "Telefone inválido";
-    if (!dataEventoInicio) return "Data de início do evento é obrigatória";
-    if (!dataEventoFim) return "Data de fim do evento é obrigatória";
-    
-    // Verificar se a data de início é anterior à data de fim
-    if (dataEventoInicio > dataEventoFim) return "Data de início deve ser anterior à data de fim";
     
     return null;
   };
 
   const generatePDF = async () => {
-    if (!formData.dataNascimento || !dataEventoInicio || !dataEventoFim) {
+    if (!formData.dataNascimento) {
       toast({
         title: "Erro",
-        description: "Todas as datas são obrigatórias para gerar o PDF.",
+        description: "A data de nascimento é obrigatória para gerar o PDF.",
         variant: "destructive",
       });
       return;
@@ -139,12 +129,10 @@ export const SubscriptionForm = ({ onBack }: SubscriptionFormProps) => {
         dataNascimento: parseDate(formData.dataNascimento),
         endereco: formData.endereco,
         telefone: formData.telefone,
-        dataEventoInicio: dataEventoInicio,
-        dataEventoFim: dataEventoFim,
       };
       
       const pdfUrl = await pdfService.generatePDF(pdfFormData);
-      await pdfService.downloadPDF(pdfUrl, 'formulario-assinatura-elegante.pdf');
+      await pdfService.downloadPDF(pdfUrl, 'termo-nda-servidores.pdf');
       
       toast({
         title: "PDF gerado com sucesso!",
@@ -211,8 +199,7 @@ export const SubscriptionForm = ({ onBack }: SubscriptionFormProps) => {
       endereco: "",
       telefone: "",
     });
-    setDataEventoInicio(undefined);
-    setDataEventoFim(undefined);
+
     setCurrentStep('form');
   };
 
@@ -229,8 +216,6 @@ export const SubscriptionForm = ({ onBack }: SubscriptionFormProps) => {
     return (
       <ConfirmationStep
         formData={formData}
-        dataEventoInicio={dataEventoInicio!}
-        dataEventoFim={dataEventoFim!}
         onBack={handleBackToForm}
         onConfirm={handleConfirmSubmit}
         onEdit={handleEditFromConfirmation}
@@ -332,8 +317,8 @@ export const SubscriptionForm = ({ onBack }: SubscriptionFormProps) => {
             <ArrowLeft className="mr-2 h-4 w-4" />
             Voltar
           </Button>
-          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-slate-800 mb-2">Nova Termo</h1>
-          <p className="text-slate-600 text-sm md:text-base">Preencha os dados abaixo para criar seu termo de responsabilidade</p>
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-slate-800 mb-2">Novo Termo de Confidencialidade</h1>
+          <p className="text-slate-600 text-sm md:text-base">Preencha os dados abaixo para gerar seu documento NDA</p>
         </div>
 
         {/* Progress Indicator */}
@@ -343,10 +328,10 @@ export const SubscriptionForm = ({ onBack }: SubscriptionFormProps) => {
         <Card className="shadow-2xl border-0 bg-white/90 backdrop-blur-sm">
           <CardHeader className="text-center pb-6">
             <CardTitle className="text-lg md:text-xl font-semibold text-slate-800">
-              Dados da Assinatura
+              Termo de Confidencialidade (NDA)
             </CardTitle>
             <CardDescription className="text-slate-600 text-sm md:text-base">
-              Todas as informações são obrigatórias
+              Preencha seus dados para gerar o documento
             </CardDescription>
           </CardHeader>
           
@@ -425,67 +410,7 @@ export const SubscriptionForm = ({ onBack }: SubscriptionFormProps) => {
                 />
               </div>
 
-              {/* Data de Início do Evento */}
-              <div className="space-y-2">
-                <Label className="text-slate-700 font-medium text-sm md:text-base">
-                  Data de Início do Evento
-                </Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full h-12 justify-start text-left font-normal border-slate-200 text-sm md:text-base",
-                        !dataEventoInicio && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {dataEventoInicio ? format(dataEventoInicio, "dd/MM/yyyy", { locale: ptBR }) : "Selecione a data de início"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={dataEventoInicio}
-                      onSelect={setDataEventoInicio}
-                      disabled={(date) => date < new Date()}
-                      initialFocus
-                      className="p-3 pointer-events-auto"
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
 
-              {/* Data de Fim do Evento */}
-              <div className="space-y-2">
-                <Label className="text-slate-700 font-medium text-sm md:text-base">
-                  Data de Fim do Evento
-                </Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full h-12 justify-start text-left font-normal border-slate-200 text-sm md:text-base",
-                        !dataEventoFim && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {dataEventoFim ? format(dataEventoFim, "dd/MM/yyyy", { locale: ptBR }) : "Selecione a data de fim"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={dataEventoFim}
-                      onSelect={setDataEventoFim}
-                      disabled={(date) => date < new Date()}
-                      initialFocus
-                      className="p-3 pointer-events-auto"
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
 
               {/* Submit Button */}
               <Button

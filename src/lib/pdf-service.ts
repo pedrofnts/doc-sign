@@ -11,8 +11,10 @@ interface PDFFormData {
   dataNascimento: Date;
   endereco: string;
   telefone: string;
-  dataEventoInicio: Date;
-  dataEventoFim: Date;
+  email?: string;
+  estadoCivil?: string;
+  dataEventoInicio?: Date;
+  dataEventoFim?: Date;
 }
 
 import { PDF_CONFIG, validatePDFConfig } from '@/config/pdf-config';
@@ -38,107 +40,67 @@ export class PDFService {
     const cpfNumbers = this.formatCPFNumbers(formData.cpf);
     const phoneNumbers = this.formatPhoneNumbers(formData.telefone);
     
-    const dayBirth = formData.dataNascimento.getDate().toString().padStart(2, '0');
-    const monthBirth = (formData.dataNascimento.getMonth() + 1).toString().padStart(2, '0');
-    const yearBirth = formData.dataNascimento.getFullYear().toString();
-    
-    // Extrair informações das datas do evento
-    const dayEventStart = formData.dataEventoInicio.getDate().toString().padStart(2, '0');
-    const dayEventEnd = formData.dataEventoFim.getDate().toString().padStart(2, '0');
-    const monthEventStart = formData.dataEventoInicio.toLocaleDateString('pt-BR', { month: 'long' });
-    const yearEventStart = formData.dataEventoInicio.getFullYear().toString();
-    
-    // Extrair DDD e número do telefone
-    const ddd = phoneNumbers.substring(0, 2);
-    const phoneNumber = phoneNumbers.substring(2);
+    // Format date as DD/MM/YYYY
+    const formatDateToBR = (date: Date): string => {
+      const day = date.getDate().toString().padStart(2, '0');
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const year = date.getFullYear().toString();
+      return `${day}/${month}/${year}`;
+    };
     
     return [
       {
         text: formData.nomeCompleto,
-        x: 159,
-        y: 192.88,
+        x: 155.06,
+        y: 74.59,
         pages: "0"
       },
       {
         text: cpfNumbers,
-        x: 96.37,
-        y: 221.51,
-        pages: "0"
-      },
-      {
-        text: dayBirth,
-        x: 178.63,
-        y: 250.26,
-        pages: "0"
-      },
-      {
-        text: monthBirth,
-        x: 215.5,
-        y: 250.51,
-        pages: "0"
-      },
-      {
-        text: yearBirth,
-        x: 250,
-        y: 251.13,
+        x: 100.71,
+        y: 93.47,
         pages: "0"
       },
       {
         text: formData.endereco,
-        x: 123.62,
-        y: 280.88,
+        x: 168.53,
+        y: 112.77,
         pages: "0"
       },
       {
-        text: ddd,
-        x: 125,
-        y: 309.13,
+        text: formData.estadoCivil || "Solteiro(a)",
+        x: 131.35,
+        y: 151.83,
         pages: "0"
       },
       {
-        text: phoneNumber,
-        x: 159.62,
-        y: 308.63,
-        pages: "0"
-      },
-      // Dia inicial do evento
-      {
-        text: dayEventStart,
-        x: 169.12,
-        y: 164.38,
-        pages: "0"
-      },
-      // Dia final do evento
-      {
-        text: dayEventEnd,
-        x: 216.62,
-        y: 165.51,
-        pages: "0"
-      },
-      // Mês do evento
-      {
-        text: monthEventStart,
-        x: 307,
-        y: 164,
-        pages: "0"
-      },
-      // Ano do evento
-      {
-        text: yearEventStart,
-        x: 441,
-        y: 165.38,
+        text: formatDateToBR(formData.dataNascimento),
+        x: 172.35,
+        y: 171,
         pages: "0"
       },
       {
-        text: "Salvador/BA",
-        x: 106.75,
-        y: 367.88,
+        text: phoneNumbers,
+        x: 118.18,
+        y: 190.83,
+        pages: "0"
+      },
+      {
+        text: formData.email || (formData.nomeCompleto.toLowerCase().replace(/\s+/g, '') + "@email.com"),
+        x: 108.18,
+        y: 210.65,
+        pages: "0"
+      },
+      {
+        text: formatDateToBR(new Date()),
+        x: 115.06,
+        y: 386.47,
         pages: "4"
       },
       {
-        text: new Date().toLocaleDateString('pt-BR'),
-        x: 102.49,
-        y: 399.5,
+        text: "Salvador/BA",
+        x: 159.24,
+        y: 401.3,
         pages: "4"
       }
     ];
@@ -224,4 +186,6 @@ export const getPDFService = (): PDFService => {
   return pdfServiceInstance;
 };
 
+export default PDFService; 
+export default PDFService; 
 export default PDFService; 

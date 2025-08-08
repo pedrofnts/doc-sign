@@ -2,8 +2,8 @@ export const PDF_CONFIG = {
   // PDF.co API Configuration
   API_KEY: import.meta.env.VITE_PDF_CO_API_KEY || 'INSERT_YOUR_API_KEY_HERE',
   
-  // PDF Template URL - replace with your actual PDF URL
-  TEMPLATE_URL: import.meta.env.VITE_PDF_TEMPLATE_URL || 'https://raw.githubusercontent.com/pedrofnts/assinatura-elegante-formulario/main/doc.pdf',
+  // PDF Template URL - NDA template
+  TEMPLATE_URL: import.meta.env.VITE_PDF_TEMPLATE_URL || 'INSERT_URL_TO_INPUT_FILE_NDA_Servidores_19_03_25.pdf',
   
   // API Base URL
   BASE_URL: 'https://api.pdf.co/v1',
